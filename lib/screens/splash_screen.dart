@@ -29,7 +29,7 @@ class _SplashScreenState extends State<SplashScreen>
 
   Future<void> _init() async {
     final hasIr = await IrService.hasIrBlaster();
-    if (mounted) context.read<AppState>().setHasIr(hasIr);
+    if (mounted) context.read<RemoteAppState>().setHasIr(hasIr);
     await Future.delayed(const Duration(seconds: 2));
     if (mounted) {
       Navigator.pushReplacement(

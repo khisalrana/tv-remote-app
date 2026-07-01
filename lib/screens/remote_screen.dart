@@ -42,7 +42,7 @@ class _RemoteScreenState extends State<RemoteScreen> {
       return;
     }
     HapticFeedback.lightImpact();
-    final codes = context.read<AppState>().irCodes;
+    final codes = context.read<RemoteAppState>().irCodes;
     if (codes == null) return;
     await IrService.sendIrCode(codes.parseIrCode(code));
     AdService.trackButtonPress();
@@ -50,7 +50,7 @@ class _RemoteScreenState extends State<RemoteScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final appState = context.watch<AppState>();
+    final appState = context.watch<RemoteAppState>();
     final brand = appState.selectedBrand;
     final codes = appState.irCodes;
 
@@ -136,7 +136,7 @@ class _RemoteScreenState extends State<RemoteScreen> {
       _iconBtn(Icons.info_outline_rounded, 'Info',
           const Color(0xFF7C4DFF), const Color(0xFFEEEDFE),
           () => _send(codes?.info)),
-      _iconBtn(Icons.guide_rounded, 'Guide',
+      _iconBtn(Icons.menu_book_rounded, 'Guide',
           const Color(0xFF43B97F), const Color(0xFFEAF3DE),
           () => _send(codes?.guide)),
     ]);
@@ -295,12 +295,12 @@ class _RemoteScreenState extends State<RemoteScreen> {
         children: nums.map((n) {
           if (n[0] == '') return const SizedBox();
           return GestureDetector(
-            onTap: () => _send(n[1] as String?),
+            onTap: () => _send(n[1]),
             child: Container(
               decoration: BoxDecoration(color: const Color(0xFFF7F9FC),
                   borderRadius: BorderRadius.circular(10),
                   border: Border.all(color: const Color(0xFFEEEEEE))),
-              child: Center(child: Text(n[0] as String,
+              child: Center(child: Text(n[0]!,
                   style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w500,
                       color: Color(0xFF1A1A2E)))),
             ),

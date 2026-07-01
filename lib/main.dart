@@ -17,13 +17,13 @@ void main() async {
   await AdService.loadInterstitialAd();
   runApp(
     ChangeNotifierProvider(
-      create: (_) => AppState(),
+      create: (_) => RemoteAppState(),
       child: const MyApp(),
     ),
   );
 }
 
-class AppState extends ChangeNotifier {
+class RemoteAppState extends ChangeNotifier {
   BrandModel? selectedBrand;
   IrCodeModel? irCodes;
   bool hasIr = false;

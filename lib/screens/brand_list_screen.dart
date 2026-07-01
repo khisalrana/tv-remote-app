@@ -53,7 +53,7 @@ class _BrandListScreenState extends State<BrandListScreen> {
   Future<void> _select(BrandModel brand) async {
     final codes = await IrService.loadIrCodes(brand.fileIndex);
     if (codes == null || !mounted) return;
-    context.read<AppState>().setBrand(brand, codes);
+    context.read<RemoteAppState>().setBrand(brand, codes);
     AdService.showInterstitialAd();
     Navigator.push(context, MaterialPageRoute(builder: (_) => const RemoteScreen()));
   }

@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 
 class AdService {
@@ -23,7 +24,6 @@ class AdService {
 
   // Interstitial Ad
   static InterstitialAd? _interstitialAd;
-  static int _buttonPressCount = 0;
 
   static Future<void> loadInterstitialAd() async {
     await InterstitialAd.load(
@@ -36,18 +36,30 @@ class AdService {
     );
   }
 
-  static void trackButtonPress() {
-    _buttonPressCount++;
-    if (_buttonPressCount % 20 == 0) {
-      showInterstitialAd();
+  /// Shows an interstitial ONLY at a natural transition point (e.g. leaving
+  /// the remote screen) — never during live button presses, per AdMob's own
+  /// guidance for utility-style apps. [onComplete] always fires exactly once:
+  /// immediately if no ad is ready, or right after the ad is closed/fails to
+  /// show, so navigation is never blocked or duplicated.
+  static void showInterstitialOnTransition(VoidCallback onComplete) {
+    final ad = _interstitialAd;
+    if (ad == null) {
+      onComplete();
+      return;
     }
-  }
-
-  static void showInterstitialAd() {
-    if (_interstitialAd != null) {
-      _interstitialAd!.show();
-      _interstitialAd = null;
-      loadInterstitialAd();
-    }
+    _interstitialAd = null;
+    ad.fullScreenContentCallback = FullScreenContentCallback(
+      onAdDismissedFullScreenContent: (a) {
+        a.dispose();
+        loadInterstitialAd();
+        onComplete();
+      },
+      onAdFailedToShowFullScreenContent: (a, error) {
+        a.dispose();
+        loadInterstitialAd();
+        onComplete();
+      },
+    );
+    ad.show();
   }
 }

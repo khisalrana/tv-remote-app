@@ -16,6 +16,7 @@ class IrCodeModel {
   final String? num0, num1, num2, num3, num4, num5, num6, num7, num8, num9;
   final String? play, pause, stop, rewind, forward;
   final String? red, green, yellow, blue, info, guide;
+  final String? threeD, chlist, sleep, smart;
 
   IrCodeModel({
     required this.id,
@@ -25,6 +26,7 @@ class IrCodeModel {
     this.num5, this.num6, this.num7, this.num8, this.num9,
     this.play, this.pause, this.stop, this.rewind, this.forward,
     this.red, this.green, this.yellow, this.blue, this.info, this.guide,
+    this.threeD, this.chlist, this.sleep, this.smart,
   });
 
   factory IrCodeModel.fromJson(Map<String, dynamic> json) {
@@ -41,6 +43,8 @@ class IrCodeModel {
       rewind: json['rewind'], forward: json['fastforward'] ?? json['forward'],
       red: json['red'], green: json['green'], yellow: json['yellow'],
       blue: json['blue'], info: json['info'], guide: json['guide'],
+      threeD: json['3d'], chlist: json['chlist'],
+      sleep: json['sleep'], smart: json['smart'],
     );
   }
 

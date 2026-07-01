@@ -1,4 +1,4 @@
-package com.univercel.remote
+package com.clicktv.universalremote
 
 import android.content.Context
 import android.hardware.ConsumerIrManager
@@ -7,7 +7,8 @@ import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.MethodChannel
 
 class MainActivity : FlutterActivity() {
-    private val CHANNEL = "com.univercel.remote/ir"
+    // Must match the MethodChannel name used in lib/services/ir_service.dart exactly.
+    private val CHANNEL = "com.clicktv.universalremote/ir"
 
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)

@@ -45,7 +45,14 @@ class _RemoteScreenState extends State<RemoteScreen> {
     final codes = context.read<RemoteAppState>().irCodes;
     if (codes == null) return;
     await IrService.sendIrCode(codes.parseIrCode(code));
-    AdService.trackButtonPress();
+  }
+
+  void _goBack() {
+    // Show the interstitial (if ready) only here — a natural stopping point
+    // where the user is done controlling this TV — never mid-button-press.
+    AdService.showInterstitialOnTransition(() {
+      if (mounted) Navigator.pop(context);
+    });
   }
 
   @override
@@ -101,7 +108,7 @@ class _RemoteScreenState extends State<RemoteScreen> {
           bottomLeft: Radius.circular(24), bottomRight: Radius.circular(24))),
       child: Row(children: [
         GestureDetector(
-          onTap: () => Navigator.pop(context),
+          onTap: _goBack,
           child: Container(
             width: 36, height: 36,
             decoration: BoxDecoration(color: const Color(0xFFF2F5F9),
@@ -181,7 +188,7 @@ class _RemoteScreenState extends State<RemoteScreen> {
         const SizedBox(height: 16),
         Row(mainAxisAlignment: MainAxisAlignment.spaceEvenly, children: [
           _smallBtn(Icons.arrow_back_rounded, 'Back', () => _send(codes?.back)),
-          _smallBtn(Icons.home_rounded, 'Home', () => _send(codes?.menu)),
+          _smallBtn(Icons.format_list_bulleted_rounded, 'Ch. List', () => _send(codes?.chlist)),
           _smallBtn(Icons.menu_rounded, 'Menu', () => _send(codes?.menu)),
           _smallBtn(Icons.exit_to_app_rounded, 'Exit', () => _send(codes?.exit)),
         ]),
@@ -383,11 +390,11 @@ class _RemoteScreenState extends State<RemoteScreen> {
         boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 8, offset: const Offset(0, 2))]),
       child: Row(mainAxisAlignment: MainAxisAlignment.spaceEvenly, children: [
-        _featureBtn(Icons.threed_rotation, '3D Mode', () => _send(null)),
+        _featureBtn(Icons.threed_rotation, '3D Mode', () => _send(codes?.threeD)),
         Container(width: 1, height: 28, color: const Color(0xFFEEEEEE)),
-        _featureBtn(Icons.mic_rounded, 'Voice', () => _send(null)),
+        _featureBtn(Icons.bedtime_rounded, 'Sleep', () => _send(codes?.sleep)),
         Container(width: 1, height: 28, color: const Color(0xFFEEEEEE)),
-        _featureBtn(Icons.keyboard_rounded, 'Keyboard', () => _send(null)),
+        _featureBtn(Icons.dashboard_customize_rounded, 'Smart', () => _send(codes?.smart)),
       ]),
     );
   }

@@ -3,7 +3,7 @@ import 'package:flutter/services.dart';
 import '../models/brand_model.dart';
 
 class IrService {
-  static const MethodChannel _channel = MethodChannel('com.univercel.remote/ir');
+  static const MethodChannel _channel = MethodChannel('com.clicktv.universalremote/ir');
 
   static Future<bool> hasIrBlaster() async {
     try {

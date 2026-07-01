@@ -1,5 +1,5 @@
-name: univercel_remote
-description: Universal TV Remote Controller
+name: clicktv_remote
+description: Universal Remote - ClickTV
 publish_to: 'none'
 version: 1.0.0+1
 

@@ -422,7 +422,7 @@
       "languageVersion": "3.4"
     },
     {
-      "name": "univercel_remote",
+      "name": "clicktv_remote",
       "rootUri": "../",
       "packageUri": "lib/",
       "languageVersion": "3.3"

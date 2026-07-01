@@ -1,13 +1,9 @@
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 
 class AdService {
-  // Test IDs - Replace with real AdMob IDs before publishing to Play Store
-  static const String _bannerTestId = 'ca-app-pub-3940256099942544/6300978111';
-  static const String _interstitialTestId = 'ca-app-pub-3940256099942544/1033173712';
-
-  // TODO: Replace these with your real AdMob IDs
-  static const String bannerAdUnitId = _bannerTestId;
-  static const String interstitialAdUnitId = _interstitialTestId;
+  // Real AdMob IDs
+  static const String bannerAdUnitId = 'ca-app-pub-9576636767696975/5296616757';
+  static const String interstitialAdUnitId = 'ca-app-pub-9576636767696975/6972660509';
 
   static Future<void> initialize() async {
     await MobileAds.instance.initialize();
@@ -40,7 +36,6 @@ class AdService {
     );
   }
 
-  // Show interstitial every 20 button presses
   static void trackButtonPress() {
     _buttonPressCount++;
     if (_buttonPressCount % 20 == 0) {

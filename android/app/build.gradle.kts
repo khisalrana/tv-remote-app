@@ -5,7 +5,7 @@ plugins {
 }
 
 android {
-    namespace = "com.univercel.remote"
+    namespace = "com.clicktv.universalremote"
     compileSdk = 35
     ndkVersion = "27.0.12077973"
 
@@ -19,7 +19,7 @@ android {
     }
 
     defaultConfig {
-        applicationId = "com.univercel.remote"
+        applicationId = "com.clicktv.universalremote"
         minSdk = 24
         targetSdk = 35
         versionCode = 1

@@ -134,9 +134,7 @@ class _RemoteScreenState extends State<RemoteScreen> {
   // ── Power + Mute ──
   Widget _powerRow(IrCodeModel? codes) {
     return Row(mainAxisAlignment: MainAxisAlignment.spaceEvenly, children: [
-      _iconBtn(Icons.power_settings_new, 'Power',
-          const Color(0xFFFF6B6B), const Color(0xFFFFEEEE),
-          () => _send(codes?.power)),
+      _powerBtn(() => _send(codes?.power)),
       _iconBtn(Icons.volume_off_rounded, 'Mute',
           const Color(0xFF4DB6E8), const Color(0xFFE8F6FD),
           () => _send(codes?.mute)),
@@ -147,6 +145,28 @@ class _RemoteScreenState extends State<RemoteScreen> {
           const Color(0xFF43B97F), const Color(0xFFEAF3DE),
           () => _send(codes?.guide)),
     ]);
+  }
+
+  Widget _powerBtn(VoidCallback onTap) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Column(children: [
+        Container(
+          width: 58, height: 58,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            gradient: const LinearGradient(
+              begin: Alignment.topLeft, end: Alignment.bottomRight,
+              colors: [Color(0xFFFF7A7A), Color(0xFFE63946)]),
+            boxShadow: [BoxShadow(color: const Color(0xFFE63946).withValues(alpha: 0.35),
+                blurRadius: 12, offset: const Offset(0, 4))],
+          ),
+          child: const Icon(Icons.power_settings_new_rounded, color: Colors.white, size: 26),
+        ),
+        const SizedBox(height: 4),
+        const Text('Power', style: TextStyle(fontSize: 10, color: Color(0xFF9E9E9E))),
+      ]),
+    );
   }
 
   Widget _iconBtn(IconData icon, String label, Color c, Color bg, VoidCallback onTap) {
@@ -200,10 +220,16 @@ class _RemoteScreenState extends State<RemoteScreen> {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        width: 50, height: 50,
-        decoration: BoxDecoration(color: const Color(0xFFF2F5F9),
-            borderRadius: BorderRadius.circular(14)),
-        child: Icon(icon, size: 28, color: const Color(0xFF555555)),
+        width: 54, height: 54,
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(16),
+          gradient: const LinearGradient(
+            begin: Alignment.topLeft, end: Alignment.bottomRight,
+            colors: [Color(0xFF6FD0F7), Color(0xFF3AA8EE)]),
+          boxShadow: [BoxShadow(color: const Color(0xFF3AA8EE).withValues(alpha: 0.28),
+              blurRadius: 10, offset: const Offset(0, 3))],
+        ),
+        child: Icon(icon, size: 28, color: Colors.white),
       ),
     );
   }
@@ -282,37 +308,90 @@ class _RemoteScreenState extends State<RemoteScreen> {
     );
   }
 
-  // ── Number Pad ──
+  // ── Number entry (uses the phone's own keyboard) ──
   Widget _numPad(IrCodeModel? codes) {
-    final nums = [
-      ['1', codes?.num1], ['2', codes?.num2], ['3', codes?.num3],
-      ['4', codes?.num4], ['5', codes?.num5], ['6', codes?.num6],
-      ['7', codes?.num7], ['8', codes?.num8], ['9', codes?.num9],
-      ['', null],         ['0', codes?.num0], ['', null],
-    ];
     return Container(
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(24),
+      padding: const EdgeInsets.symmetric(vertical: 16),
+      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(20),
         boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 12, offset: const Offset(0, 2))]),
-      child: GridView.count(
-        crossAxisCount: 3, shrinkWrap: true,
-        physics: const NeverScrollableScrollPhysics(),
-        mainAxisSpacing: 8, crossAxisSpacing: 8, childAspectRatio: 2.2,
-        children: nums.map((n) {
-          if (n[0] == '') return const SizedBox();
-          return GestureDetector(
-            onTap: () => _send(n[1]),
-            child: Container(
-              decoration: BoxDecoration(color: const Color(0xFFF7F9FC),
-                  borderRadius: BorderRadius.circular(10),
-                  border: Border.all(color: const Color(0xFFEEEEEE))),
-              child: Center(child: Text(n[0]!,
-                  style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w500,
-                      color: Color(0xFF1A1A2E)))),
+      child: GestureDetector(
+        onTap: () => _openNumberEntry(codes),
+        behavior: HitTestBehavior.opaque,
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(Icons.dialpad_rounded, color: Color(0xFF4DB6E8), size: 20),
+            const SizedBox(width: 10),
+            const Text('Enter Channel Number',
+                style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: Color(0xFF1A1A2E))),
+          ],
+        ),
+      ),
+    );
+  }
+
+  String? _codeForDigit(IrCodeModel codes, String digit) {
+    switch (digit) {
+      case '0': return codes.num0;
+      case '1': return codes.num1;
+      case '2': return codes.num2;
+      case '3': return codes.num3;
+      case '4': return codes.num4;
+      case '5': return codes.num5;
+      case '6': return codes.num6;
+      case '7': return codes.num7;
+      case '8': return codes.num8;
+      case '9': return codes.num9;
+      default: return null;
+    }
+  }
+
+  Future<void> _openNumberEntry(IrCodeModel? codes) async {
+    if (codes == null) return;
+    final controller = TextEditingController();
+    await showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
+      builder: (ctx) => Padding(
+        padding: EdgeInsets.only(
+          left: 20, right: 20, top: 20,
+          bottom: MediaQuery.of(ctx).viewInsets.bottom + 20,
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text('Type a channel number',
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: Color(0xFF1A1A2E))),
+            const SizedBox(height: 4),
+            const Text('Each digit is sent to the TV as you type it.',
+                style: TextStyle(fontSize: 12, color: Color(0xFF9E9E9E))),
+            const SizedBox(height: 16),
+            TextField(
+              controller: controller,
+              autofocus: true,
+              keyboardType: TextInputType.number,
+              style: const TextStyle(fontSize: 22, letterSpacing: 4),
+              decoration: InputDecoration(
+                hintText: '000',
+                filled: true,
+                fillColor: const Color(0xFFF2F5F9),
+                border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(14), borderSide: BorderSide.none),
+              ),
+              onChanged: (value) {
+                if (value.isEmpty) return;
+                final digit = value[value.length - 1];
+                _send(_codeForDigit(codes, digit));
+              },
             ),
-          );
-        }).toList(),
+            const SizedBox(height: 8),
+          ],
+        ),
       ),
     );
   }

@@ -25,3 +25,6 @@ flutter:
   assets:
     - assets/brands/
     - assets/ir_codes/
+    - assets/icon/
+    - assets/ac_brands/
+    - assets/ac_codes/

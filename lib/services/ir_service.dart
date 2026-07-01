@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:flutter/services.dart';
 import '../models/brand_model.dart';
+import '../models/ac_model.dart';
 
 class IrService {
   static const MethodChannel _channel = MethodChannel('com.clicktv.universalremote/ir');
@@ -41,6 +42,28 @@ class IrService {
           .toList();
     } catch (_) {
       return [];
+    }
+  }
+
+  // ── AC ──
+  static Future<List<BrandModel>> loadAcBrands() async {
+    try {
+      final data = await rootBundle.loadString('assets/ac_brands/brand.json');
+      final list = jsonDecode(data) as List;
+      return list.asMap().entries
+          .map((e) => BrandModel.fromJson(e.value, e.key))
+          .toList();
+    } catch (_) {
+      return [];
+    }
+  }
+
+  static Future<AcCodeModel?> loadAcCodes(int index) async {
+    try {
+      final data = await rootBundle.loadString('assets/ac_codes/$index.json');
+      return AcCodeModel.fromJson(jsonDecode(data));
+    } catch (_) {
+      return null;
     }
   }
 }

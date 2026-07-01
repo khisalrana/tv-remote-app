@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../main.dart';
 import '../services/ir_service.dart';
-import 'brand_list_screen.dart';
+import 'category_screen.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -33,7 +33,7 @@ class _SplashScreenState extends State<SplashScreen>
     await Future.delayed(const Duration(seconds: 2));
     if (mounted) {
       Navigator.pushReplacement(
-          context, MaterialPageRoute(builder: (_) => const BrandListScreen()));
+          context, MaterialPageRoute(builder: (_) => const CategoryScreen()));
     }
   }
 
@@ -55,7 +55,6 @@ class _SplashScreenState extends State<SplashScreen>
                 Container(
                   width: 120, height: 120,
                   decoration: BoxDecoration(
-                    color: const Color(0xFFE8F6FD),
                     borderRadius: BorderRadius.circular(32),
                     boxShadow: [
                       BoxShadow(
@@ -64,7 +63,10 @@ class _SplashScreenState extends State<SplashScreen>
                       )
                     ],
                   ),
-                  child: const Icon(Icons.tv_rounded, size: 64, color: Color(0xFF4DB6E8)),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(32),
+                    child: Image.asset('assets/icon/app_icon.png', fit: BoxFit.cover),
+                  ),
                 ),
                 const SizedBox(height: 28),
                 const Text('Univercel Remote',

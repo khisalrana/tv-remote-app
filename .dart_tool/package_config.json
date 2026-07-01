@@ -81,7 +81,7 @@
     },
     {
       "name": "flutter_lints",
-      "rootUri": "file:///C:/Users/Shayaan%20Rana/AppData/Local/Pub/Cache/hosted/pub.dev/flutter_lints-3.0.2",
+      "rootUri": "file:///C:/Users/Shayaan%20Rana/AppData/Local/Pub/Cache/hosted/pub.dev/flutter_lints-4.0.0",
       "packageUri": "lib/",
       "languageVersion": "3.1"
     },
@@ -105,9 +105,9 @@
     },
     {
       "name": "google_mobile_ads",
-      "rootUri": "file:///C:/Users/Shayaan%20Rana/AppData/Local/Pub/Cache/hosted/pub.dev/google_mobile_ads-4.0.0",
+      "rootUri": "file:///C:/Users/Shayaan%20Rana/AppData/Local/Pub/Cache/hosted/pub.dev/google_mobile_ads-5.3.1",
       "packageUri": "lib/",
-      "languageVersion": "2.15"
+      "languageVersion": "2.17"
     },
     {
       "name": "hooks",
@@ -159,9 +159,9 @@
     },
     {
       "name": "lints",
-      "rootUri": "file:///C:/Users/Shayaan%20Rana/AppData/Local/Pub/Cache/hosted/pub.dev/lints-3.0.0",
+      "rootUri": "file:///C:/Users/Shayaan%20Rana/AppData/Local/Pub/Cache/hosted/pub.dev/lints-4.0.0",
       "packageUri": "lib/",
-      "languageVersion": "3.0"
+      "languageVersion": "3.1"
     },
     {
       "name": "logging",
@@ -387,15 +387,15 @@
     },
     {
       "name": "webview_flutter",
-      "rootUri": "file:///C:/Users/Shayaan%20Rana/AppData/Local/Pub/Cache/hosted/pub.dev/webview_flutter-4.9.0",
+      "rootUri": "file:///C:/Users/Shayaan%20Rana/AppData/Local/Pub/Cache/hosted/pub.dev/webview_flutter-4.14.0",
       "packageUri": "lib/",
-      "languageVersion": "3.5"
+      "languageVersion": "3.10"
     },
     {
       "name": "webview_flutter_android",
-      "rootUri": "file:///C:/Users/Shayaan%20Rana/AppData/Local/Pub/Cache/hosted/pub.dev/webview_flutter_android-3.16.9",
+      "rootUri": "file:///C:/Users/Shayaan%20Rana/AppData/Local/Pub/Cache/hosted/pub.dev/webview_flutter_android-4.13.0",
       "packageUri": "lib/",
-      "languageVersion": "3.5"
+      "languageVersion": "3.12"
     },
     {
       "name": "webview_flutter_platform_interface",
@@ -422,10 +422,10 @@
       "languageVersion": "3.4"
     },
     {
-      "name": "tv_remote_app",
+      "name": "univercel_remote",
       "rootUri": "../",
       "packageUri": "lib/",
-      "languageVersion": "3.0"
+      "languageVersion": "3.3"
     }
   ],
   "generator": "pub",

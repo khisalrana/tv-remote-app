@@ -3,50 +3,43 @@ import 'package:flutter/services.dart';
 import '../models/brand_model.dart';
 
 class IrService {
-  static const MethodChannel _channel = MethodChannel('com.tvremote.app/ir');
+  static const MethodChannel _channel = MethodChannel('com.univercel.remote/ir');
 
   static Future<bool> hasIrBlaster() async {
     try {
-      final bool result = await _channel.invokeMethod('hasIrBlaster');
-      return result;
-    } catch (e) {
+      return await _channel.invokeMethod('hasIrBlaster') ?? false;
+    } catch (_) {
       return false;
     }
   }
 
-  static Future<bool> sendIrCode(List<int> pattern) async {
-    if (pattern.isEmpty) return false;
+  static Future<void> sendIrCode(List<int> pattern) async {
+    if (pattern.isEmpty) return;
     try {
       await _channel.invokeMethod('transmit', {
         'frequency': 38000,
         'pattern': pattern,
       });
-      return true;
-    } catch (e) {
-      return false;
-    }
+    } catch (_) {}
   }
 
-  static Future<IrCodeModel?> loadIrCodes(int fileIndex) async {
+  static Future<IrCodeModel?> loadIrCodes(int index) async {
     try {
-      final String data = await rootBundle.loadString(
-        'assets/ir_codes/$fileIndex.json'
-      );
-      final Map<String, dynamic> json = jsonDecode(data);
-      return IrCodeModel.fromJson(json);
-    } catch (e) {
+      final data = await rootBundle.loadString('assets/ir_codes/$index.json');
+      return IrCodeModel.fromJson(jsonDecode(data));
+    } catch (_) {
       return null;
     }
   }
 
   static Future<List<BrandModel>> loadBrands() async {
     try {
-      final String data = await rootBundle.loadString('assets/brands/brand.json');
-      final List<dynamic> json = jsonDecode(data);
-      return json.asMap().entries
+      final data = await rootBundle.loadString('assets/brands/brand.json');
+      final list = jsonDecode(data) as List;
+      return list.asMap().entries
           .map((e) => BrandModel.fromJson(e.value, e.key))
           .toList();
-    } catch (e) {
+    } catch (_) {
       return [];
     }
   }

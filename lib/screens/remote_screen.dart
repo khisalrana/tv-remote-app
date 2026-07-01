@@ -3,9 +3,9 @@ import 'package:flutter/services.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:provider/provider.dart';
 import '../main.dart';
-import '../services/ir_service.dart';
-import '../services/ad_service.dart';
 import '../models/brand_model.dart';
+import '../services/ad_service.dart';
+import '../services/ir_service.dart';
 
 class RemoteScreen extends StatefulWidget {
   const RemoteScreen({super.key});
@@ -13,298 +13,179 @@ class RemoteScreen extends StatefulWidget {
   State<RemoteScreen> createState() => _RemoteScreenState();
 }
 
-class _RemoteScreenState extends State<RemoteScreen>
-    with SingleTickerProviderStateMixin {
-  BannerAd? _bannerAd;
+class _RemoteScreenState extends State<RemoteScreen> {
+  BannerAd? _banner;
   bool _bannerReady = false;
-  int _pressCount = 0;
-  late TabController _tabController;
 
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 2, vsync: this);
     _loadBanner();
   }
 
   void _loadBanner() {
-    _bannerAd = AdService.createBannerAd();
-    _bannerAd!.load().then((_) => setState(() => _bannerReady = true));
+    _banner = AdService.createBannerAd();
+    _banner!.load().then((_) { if (mounted) setState(() => _bannerReady = true); });
   }
 
-  Future<void> _sendCode(String? code) async {
+  Future<void> _send(String? code) async {
     if (code == null || code.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: const Text('Signal not available for this button'),
-          backgroundColor: Colors.orange.shade400,
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: const Text('Signal not available'),
+          backgroundColor: Colors.orange.shade700,
+          duration: const Duration(milliseconds: 700),
           behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-          duration: const Duration(milliseconds: 800),
-        ),
-      );
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+        ));
+      }
       return;
     }
     HapticFeedback.lightImpact();
-    final codes = context.read<RemoteAppState>().irCodes;
+    final codes = context.read<AppState>().irCodes;
     if (codes == null) return;
-    final pattern = codes.parseIrCode(code);
-    await IrService.sendIrCode(pattern);
-    _pressCount++;
-    if (_pressCount % 20 == 0) AdService.showInterstitialAd();
+    await IrService.sendIrCode(codes.parseIrCode(code));
+    AdService.trackButtonPress();
   }
 
   @override
   Widget build(BuildContext context) {
-    final appState = context.watch<RemoteAppState>();
+    final appState = context.watch<AppState>();
     final brand = appState.selectedBrand;
     final codes = appState.irCodes;
 
     return Scaffold(
       backgroundColor: const Color(0xFFF2F5F9),
       body: SafeArea(
-        child: Column(
-          children: [
-            _buildTopBar(brand),
-            Expanded(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.symmetric(horizontal: 20),
-                child: Column(
-                  children: [
-                    const SizedBox(height: 12),
-                    _buildPowerMuteRow(codes),
-                    const SizedBox(height: 16),
-                    _buildMainRemoteCard(codes),
-                    const SizedBox(height: 16),
-                    _buildBottomRow(codes),
-                    const SizedBox(height: 16),
-                    _buildNumberPad(codes),
-                    const SizedBox(height: 16),
-                    _buildChannelProgramRow(),
-                    const SizedBox(height: 20),
-                  ],
-                ),
-              ),
+        child: Column(children: [
+          _topBar(brand),
+          Expanded(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(16),
+              child: Column(children: [
+                const SizedBox(height: 8),
+                _powerRow(codes),
+                const SizedBox(height: 14),
+                _navCard(codes),
+                const SizedBox(height: 14),
+                _volChanRow(codes),
+                const SizedBox(height: 14),
+                _numPad(codes),
+                const SizedBox(height: 14),
+                _mediaRow(codes),
+                const SizedBox(height: 14),
+                _colorRow(codes),
+                const SizedBox(height: 14),
+                _bottomRow(codes),
+                const SizedBox(height: 8),
+              ]),
             ),
-            if (_bannerReady && _bannerAd != null)
-              Container(
-                height: _bannerAd!.size.height.toDouble(),
-                color: Colors.white,
-                child: AdWidget(ad: _bannerAd!),
-              ),
-          ],
-        ),
+          ),
+          if (_bannerReady && _banner != null)
+            Container(
+              height: _banner!.size.height.toDouble(),
+              color: Colors.white,
+              child: AdWidget(ad: _banner!),
+            ),
+        ]),
       ),
     );
   }
 
   // ── Top Bar ──
-  Widget _buildTopBar(BrandModel? brand) {
+  Widget _topBar(BrandModel? brand) {
     return Container(
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
-      decoration: const BoxDecoration(
-        color: Colors.white,
+      decoration: const BoxDecoration(color: Colors.white,
         borderRadius: BorderRadius.only(
-          bottomLeft: Radius.circular(24),
-          bottomRight: Radius.circular(24),
+          bottomLeft: Radius.circular(24), bottomRight: Radius.circular(24))),
+      child: Row(children: [
+        GestureDetector(
+          onTap: () => Navigator.pop(context),
+          child: Container(
+            width: 36, height: 36,
+            decoration: BoxDecoration(color: const Color(0xFFF2F5F9),
+                borderRadius: BorderRadius.circular(10)),
+            child: const Icon(Icons.arrow_back_ios_new, size: 16, color: Color(0xFF1A1A2E)),
+          ),
         ),
-      ),
-      child: Row(
-        children: [
-          GestureDetector(
-            onTap: () => Navigator.pop(context),
-            child: Container(
-              width: 36, height: 36,
-              decoration: BoxDecoration(
-                color: const Color(0xFFF2F5F9),
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: const Icon(Icons.arrow_back_ios_new, size: 16,
-                  color: Color(0xFF1A1A2E)),
-            ),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(brand?.name ?? 'TV Remote',
-                    style: const TextStyle(
-                      fontWeight: FontWeight.w700,
-                      fontSize: 16,
-                      color: Color(0xFF1A1A2E),
-                    )),
-                const Text('Universal Remote',
-                    style: TextStyle(fontSize: 11, color: Color(0xFF9E9E9E))),
-              ],
-            ),
-          ),
-          // WiFi icon
-          Container(
-            width: 36, height: 36,
-            decoration: BoxDecoration(
-              color: const Color(0xFFF2F5F9),
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: const Icon(Icons.wifi_rounded, size: 18,
-                color: Color(0xFF4DB6E8)),
-          ),
-          const SizedBox(width: 8),
-          // Settings icon
-          Container(
-            width: 36, height: 36,
-            decoration: BoxDecoration(
-              color: const Color(0xFFF2F5F9),
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: const Icon(Icons.grid_view_rounded, size: 18,
-                color: Color(0xFF1A1A2E)),
-          ),
-        ],
-      ),
+        const SizedBox(width: 12),
+        Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Text(brand?.name ?? 'TV Remote',
+              style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 16,
+                  color: Color(0xFF1A1A2E))),
+          const Text('Univercel Remote', style: TextStyle(fontSize: 11, color: Color(0xFF9E9E9E))),
+        ])),
+        Container(width: 36, height: 36,
+          decoration: BoxDecoration(color: const Color(0xFFF2F5F9),
+              borderRadius: BorderRadius.circular(10)),
+          child: const Icon(Icons.wifi_rounded, size: 18, color: Color(0xFF4DB6E8))),
+      ]),
     );
   }
 
-  // ── Power + Mute Row ──
-  Widget _buildPowerMuteRow(IrCodeModel? codes) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        _topIconBtn(Icons.power_settings_new, const Color(0xFFFF6B6B),
-            const Color(0xFFFFEEEE), () => _sendCode(codes?.power)),
-        // Vol & Chan labels row
-        Row(
-          children: [
-            _volChanPill('VOL', codes?.volUp, codes?.volDown),
-            const SizedBox(width: 10),
-            _volChanPill('CH', codes?.chanUp, codes?.chanDown),
-          ],
-        ),
-        _topIconBtn(Icons.volume_off_rounded, const Color(0xFF4DB6E8),
-            const Color(0xFFE8F6FD), () => _sendCode(codes?.mute)),
-      ],
-    );
+  // ── Power + Mute ──
+  Widget _powerRow(IrCodeModel? codes) {
+    return Row(mainAxisAlignment: MainAxisAlignment.spaceEvenly, children: [
+      _iconBtn(Icons.power_settings_new, 'Power',
+          const Color(0xFFFF6B6B), const Color(0xFFFFEEEE),
+          () => _send(codes?.power)),
+      _iconBtn(Icons.volume_off_rounded, 'Mute',
+          const Color(0xFF4DB6E8), const Color(0xFFE8F6FD),
+          () => _send(codes?.mute)),
+      _iconBtn(Icons.info_outline_rounded, 'Info',
+          const Color(0xFF7C4DFF), const Color(0xFFEEEDFE),
+          () => _send(codes?.info)),
+      _iconBtn(Icons.guide_rounded, 'Guide',
+          const Color(0xFF43B97F), const Color(0xFFEAF3DE),
+          () => _send(codes?.guide)),
+    ]);
   }
 
-  Widget _topIconBtn(IconData icon, Color iconColor, Color bgColor,
-      VoidCallback onTap) {
+  Widget _iconBtn(IconData icon, String label, Color c, Color bg, VoidCallback onTap) {
     return GestureDetector(
       onTap: onTap,
-      child: Container(
-        width: 48, height: 48,
-        decoration: BoxDecoration(
-          color: bgColor,
-          borderRadius: BorderRadius.circular(14),
-          boxShadow: [
-            BoxShadow(
-              color: iconColor.withValues(alpha: 0.2),
-              blurRadius: 8,
-              offset: const Offset(0, 3),
-            )
-          ],
+      child: Column(children: [
+        Container(
+          width: 54, height: 54,
+          decoration: BoxDecoration(color: bg, borderRadius: BorderRadius.circular(14),
+            boxShadow: [BoxShadow(color: c.withValues(alpha: 0.2),
+                blurRadius: 8, offset: const Offset(0, 3))]),
+          child: Icon(icon, color: c, size: 24),
         ),
-        child: Icon(icon, color: iconColor, size: 22),
-      ),
+        const SizedBox(height: 4),
+        Text(label, style: const TextStyle(fontSize: 10, color: Color(0xFF9E9E9E))),
+      ]),
     );
   }
 
-  Widget _volChanPill(String label, String? upCode, String? downCode) {
+  // ── Navigation D-Pad ──
+  Widget _navCard(IrCodeModel? codes) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(14),
-        boxShadow: [
-          BoxShadow(color: Colors.black.withValues(alpha: 0.06),
-              blurRadius: 8, offset: const Offset(0, 2))
-        ],
-      ),
-      child: Row(
-        children: [
-          GestureDetector(
-            onTap: () => _sendCode(downCode),
-            child: const Icon(Icons.remove, size: 16, color: Color(0xFF9E9E9E)),
-          ),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 10),
-            child: Text(label,
-                style: const TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w600,
-                    color: Color(0xFF1A1A2E))),
-          ),
-          GestureDetector(
-            onTap: () => _sendCode(upCode),
-            child: const Icon(Icons.add, size: 16, color: Color(0xFF9E9E9E)),
-          ),
-        ],
-      ),
-    );
-  }
-
-  // ── Main Remote Card (Nav pad) ──
-  Widget _buildMainRemoteCard(IrCodeModel? codes) {
-    return Container(
-      padding: const EdgeInsets.all(24),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(28),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.06),
-            blurRadius: 20,
-            offset: const Offset(0, 4),
-          )
-        ],
-      ),
-      child: Column(
-        children: [
-          // Up arrow
-          _arrowBtn(Icons.keyboard_arrow_up_rounded,
-              () => _sendCode(codes?.up)),
-          const SizedBox(height: 8),
-          // Left - DPad circle - Right
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              _arrowBtn(Icons.keyboard_arrow_left_rounded,
-                  () => _sendCode(codes?.left)),
-              const SizedBox(width: 8),
-              _dPadCenter(codes),
-              const SizedBox(width: 8),
-              _arrowBtn(Icons.keyboard_arrow_right_rounded,
-                  () => _sendCode(codes?.right)),
-            ],
-          ),
-          const SizedBox(height: 8),
-          // Down arrow
-          _arrowBtn(Icons.keyboard_arrow_down_rounded,
-              () => _sendCode(codes?.down)),
-          const SizedBox(height: 20),
-          // Action row below nav
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              _smallActionBtn(
-                  icon: Icons.settings_rounded,
-                  label: 'Settings',
-                  onTap: () => _sendCode(codes?.menu)),
-              _smallActionBtn(
-                  icon: Icons.arrow_back_rounded,
-                  label: 'Return',
-                  onTap: () => _sendCode(codes?.back)),
-              _smallActionBtn(
-                  icon: Icons.more_horiz_rounded,
-                  label: '—',
-                  onTap: () => _sendCode(null)),
-              _smallActionBtn(
-                  icon: Icons.replay_rounded,
-                  label: 'Back',
-                  onTap: () => _sendCode(codes?.back)),
-            ],
-          ),
-        ],
-      ),
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(28),
+        boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.06),
+            blurRadius: 20, offset: const Offset(0, 4))]),
+      child: Column(children: [
+        _arrowBtn(Icons.keyboard_arrow_up_rounded, () => _send(codes?.up)),
+        const SizedBox(height: 6),
+        Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+          _arrowBtn(Icons.keyboard_arrow_left_rounded, () => _send(codes?.left)),
+          const SizedBox(width: 8),
+          _okBtn(() => _send(codes?.ok)),
+          const SizedBox(width: 8),
+          _arrowBtn(Icons.keyboard_arrow_right_rounded, () => _send(codes?.right)),
+        ]),
+        const SizedBox(height: 6),
+        _arrowBtn(Icons.keyboard_arrow_down_rounded, () => _send(codes?.down)),
+        const SizedBox(height: 16),
+        Row(mainAxisAlignment: MainAxisAlignment.spaceEvenly, children: [
+          _smallBtn(Icons.arrow_back_rounded, 'Back', () => _send(codes?.back)),
+          _smallBtn(Icons.home_rounded, 'Home', () => _send(codes?.menu)),
+          _smallBtn(Icons.menu_rounded, 'Menu', () => _send(codes?.menu)),
+          _smallBtn(Icons.exit_to_app_rounded, 'Exit', () => _send(codes?.exit)),
+        ]),
+      ]),
     );
   }
 
@@ -312,122 +193,90 @@ class _RemoteScreenState extends State<RemoteScreen>
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        width: 44, height: 44,
-        decoration: BoxDecoration(
-          color: const Color(0xFFF2F5F9),
-          borderRadius: BorderRadius.circular(12),
-        ),
-        child: Icon(icon, size: 26, color: const Color(0xFF555555)),
+        width: 50, height: 50,
+        decoration: BoxDecoration(color: const Color(0xFFF2F5F9),
+            borderRadius: BorderRadius.circular(14)),
+        child: Icon(icon, size: 28, color: const Color(0xFF555555)),
       ),
     );
   }
 
-  Widget _dPadCenter(IrCodeModel? codes) {
+  Widget _okBtn(VoidCallback onTap) {
     return GestureDetector(
-      onTap: () => _sendCode(codes?.ok),
+      onTap: onTap,
       child: Container(
-        width: 100,
-        height: 100,
+        width: 90, height: 90,
         decoration: BoxDecoration(
           shape: BoxShape.circle,
           gradient: const LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [Color(0xFF5BC8F5), Color(0xFF2196F3)],
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: const Color(0xFF2196F3).withValues(alpha: 0.35),
-              blurRadius: 20,
-              offset: const Offset(0, 6),
-            )
-          ],
+            begin: Alignment.topLeft, end: Alignment.bottomRight,
+            colors: [Color(0xFF5BC8F5), Color(0xFF2196F3)]),
+          boxShadow: [BoxShadow(color: const Color(0xFF2196F3).withValues(alpha: 0.35),
+              blurRadius: 20, offset: const Offset(0, 6))],
         ),
-        child: const Center(
-          child: Text('OK',
-              style: TextStyle(
-                color: Colors.white,
-                fontWeight: FontWeight.w700,
-                fontSize: 18,
-                letterSpacing: 1,
-              )),
-        ),
+        child: const Center(child: Text('OK',
+            style: TextStyle(color: Colors.white, fontWeight: FontWeight.w700,
+                fontSize: 18, letterSpacing: 1))),
       ),
     );
   }
 
-  Widget _smallActionBtn({
-    required IconData icon,
-    required String label,
-    required VoidCallback onTap,
-  }) {
+  Widget _smallBtn(IconData icon, String label, VoidCallback onTap) {
     return GestureDetector(
       onTap: onTap,
-      child: Column(
-        children: [
-          Container(
-            width: 48, height: 48,
-            decoration: BoxDecoration(
-              color: const Color(0xFFF2F5F9),
-              borderRadius: BorderRadius.circular(14),
-            ),
-            child: Icon(icon, size: 20, color: const Color(0xFF555555)),
-          ),
-          const SizedBox(height: 4),
-          Text(label,
-              style: const TextStyle(fontSize: 10, color: Color(0xFF9E9E9E))),
-        ],
-      ),
+      child: Column(children: [
+        Container(
+          width: 46, height: 46,
+          decoration: BoxDecoration(color: const Color(0xFFF2F5F9),
+              borderRadius: BorderRadius.circular(12)),
+          child: Icon(icon, size: 20, color: const Color(0xFF555555)),
+        ),
+        const SizedBox(height: 4),
+        Text(label, style: const TextStyle(fontSize: 10, color: Color(0xFF9E9E9E))),
+      ]),
     );
   }
 
-  // ── Bottom row: 3D Mode, Mic, Keyboard ──
-  Widget _buildBottomRow(IrCodeModel? codes) {
+  // ── Vol + Chan ──
+  Widget _volChanRow(IrCodeModel? codes) {
+    return Row(children: [
+      Expanded(child: _volChan('Volume', Icons.volume_up,
+          () => _send(codes?.volUp), () => _send(codes?.volDown))),
+      const SizedBox(width: 12),
+      Expanded(child: _volChan('Channel', Icons.live_tv,
+          () => _send(codes?.chanUp), () => _send(codes?.chanDown))),
+    ]);
+  }
+
+  Widget _volChan(String label, IconData icon, VoidCallback onUp, VoidCallback onDown) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [
-          BoxShadow(color: Colors.black.withValues(alpha: 0.05),
-              blurRadius: 10, offset: const Offset(0, 2))
-        ],
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-        children: [
-          _bottomFeatureBtn(Icons.threed_rotation, '3D Mode',
-              () => _sendCode(null)),
-          Container(width: 1, height: 30,
-              color: const Color(0xFFEEEEEE)),
-          _bottomFeatureBtn(Icons.mic_rounded, 'Voice',
-              () => _sendCode(null)),
-          Container(width: 1, height: 30,
-              color: const Color(0xFFEEEEEE)),
-          _bottomFeatureBtn(Icons.keyboard_rounded, 'Keyboard',
-              () => _sendCode(null)),
-        ],
-      ),
-    );
-  }
-
-  Widget _bottomFeatureBtn(IconData icon, String label, VoidCallback onTap) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Row(
-        children: [
-          Icon(icon, size: 18, color: const Color(0xFF4DB6E8)),
-          const SizedBox(width: 6),
-          Text(label,
-              style: const TextStyle(fontSize: 12,
-                  color: Color(0xFF555555), fontWeight: FontWeight.w500)),
-        ],
-      ),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16),
+        boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.05),
+            blurRadius: 8, offset: const Offset(0, 2))]),
+      child: Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
+        GestureDetector(onTap: onDown,
+          child: Container(width: 36, height: 36,
+            decoration: BoxDecoration(color: const Color(0xFFF2F5F9),
+                borderRadius: BorderRadius.circular(10)),
+            child: const Icon(Icons.remove, size: 18, color: Color(0xFF555555)))),
+        Column(children: [
+          Icon(icon, size: 16, color: const Color(0xFF4DB6E8)),
+          const SizedBox(height: 2),
+          Text(label, style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600,
+              color: Color(0xFF1A1A2E))),
+        ]),
+        GestureDetector(onTap: onUp,
+          child: Container(width: 36, height: 36,
+            decoration: BoxDecoration(color: const Color(0xFFF2F5F9),
+                borderRadius: BorderRadius.circular(10)),
+            child: const Icon(Icons.add, size: 18, color: Color(0xFF555555)))),
+      ]),
     );
   }
 
   // ── Number Pad ──
-  Widget _buildNumberPad(IrCodeModel? codes) {
+  Widget _numPad(IrCodeModel? codes) {
     final nums = [
       ['1', codes?.num1], ['2', codes?.num2], ['3', codes?.num3],
       ['4', codes?.num4], ['5', codes?.num5], ['6', codes?.num6],
@@ -435,40 +284,25 @@ class _RemoteScreenState extends State<RemoteScreen>
       ['', null],         ['0', codes?.num0], ['', null],
     ];
     return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(24),
-        boxShadow: [
-          BoxShadow(color: Colors.black.withValues(alpha: 0.05),
-              blurRadius: 12, offset: const Offset(0, 2))
-        ],
-      ),
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(24),
+        boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.05),
+            blurRadius: 12, offset: const Offset(0, 2))]),
       child: GridView.count(
-        crossAxisCount: 3,
-        shrinkWrap: true,
+        crossAxisCount: 3, shrinkWrap: true,
         physics: const NeverScrollableScrollPhysics(),
-        mainAxisSpacing: 10,
-        crossAxisSpacing: 10,
-        childAspectRatio: 2.2,
+        mainAxisSpacing: 8, crossAxisSpacing: 8, childAspectRatio: 2.2,
         children: nums.map((n) {
           if (n[0] == '') return const SizedBox();
           return GestureDetector(
-            onTap: () => _sendCode(n[1]),
+            onTap: () => _send(n[1] as String?),
             child: Container(
-              decoration: BoxDecoration(
-                color: const Color(0xFFF7F9FC),
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: const Color(0xFFEEEEEE)),
-              ),
-              child: Center(
-                child: Text(n[0]!,
-                    style: const TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.w500,
-                      color: Color(0xFF1A1A2E),
-                    )),
-              ),
+              decoration: BoxDecoration(color: const Color(0xFFF7F9FC),
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(color: const Color(0xFFEEEEEE))),
+              child: Center(child: Text(n[0] as String,
+                  style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w500,
+                      color: Color(0xFF1A1A2E)))),
             ),
           );
         }).toList(),
@@ -476,53 +310,100 @@ class _RemoteScreenState extends State<RemoteScreen>
     );
   }
 
-  // ── Channel & Program List ──
-  Widget _buildChannelProgramRow() {
-    return Row(
-      children: [
-        Expanded(
-          child: _listBtn('Channel List', Icons.list_alt_rounded,
-              const Color(0xFF4DB6E8)),
-        ),
-        const SizedBox(width: 12),
-        Expanded(
-          child: _listBtn('Program List', Icons.video_library_rounded,
-              const Color(0xFF7C4DFF)),
-        ),
-      ],
+  // ── Media Controls ──
+  Widget _mediaRow(IrCodeModel? codes) {
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
+      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(20),
+        boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.05),
+            blurRadius: 8, offset: const Offset(0, 2))]),
+      child: Row(mainAxisAlignment: MainAxisAlignment.spaceEvenly, children: [
+        _mediaBtn(Icons.skip_previous_rounded, () => _send(codes?.rewind)),
+        _mediaBtn(Icons.fast_rewind_rounded, () => _send(codes?.rewind)),
+        _mediaBtn(Icons.play_arrow_rounded, () => _send(codes?.play), large: true),
+        _mediaBtn(Icons.pause_rounded, () => _send(codes?.pause), large: true),
+        _mediaBtn(Icons.fast_forward_rounded, () => _send(codes?.forward)),
+        _mediaBtn(Icons.stop_rounded, () => _send(codes?.stop)),
+      ]),
     );
   }
 
-  Widget _listBtn(String label, IconData icon, Color color) {
+  Widget _mediaBtn(IconData icon, VoidCallback onTap, {bool large = false}) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        width: large ? 50 : 38, height: large ? 50 : 38,
+        decoration: BoxDecoration(
+          color: large ? const Color(0xFF4DB6E8).withValues(alpha: 0.15)
+              : const Color(0xFFF2F5F9),
+          shape: BoxShape.circle,
+          border: large ? Border.all(color: const Color(0xFF4DB6E8).withValues(alpha: 0.4)) : null,
+        ),
+        child: Icon(icon,
+          color: large ? const Color(0xFF4DB6E8) : const Color(0xFF555555),
+          size: large ? 26 : 20),
+      ),
+    );
+  }
+
+  // ── Color Buttons ──
+  Widget _colorRow(IrCodeModel? codes) {
     return Container(
-      padding: const EdgeInsets.symmetric(vertical: 14),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(color: Colors.black.withValues(alpha: 0.05),
-              blurRadius: 8, offset: const Offset(0, 2))
-        ],
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(icon, size: 18, color: color),
-          const SizedBox(width: 8),
-          Text(label,
-              style: TextStyle(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w600,
-                  color: color)),
-        ],
-      ),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16),
+        boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.05),
+            blurRadius: 8, offset: const Offset(0, 2))]),
+      child: Row(mainAxisAlignment: MainAxisAlignment.spaceEvenly, children: [
+        _colorBtn(Colors.red, 'Red', () => _send(codes?.red)),
+        _colorBtn(Colors.green, 'Green', () => _send(codes?.green)),
+        _colorBtn(Colors.yellow, 'Yellow', () => _send(codes?.yellow)),
+        _colorBtn(Colors.blue, 'Blue', () => _send(codes?.blue)),
+      ]),
+    );
+  }
+
+  Widget _colorBtn(Color color, String label, VoidCallback onTap) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Column(children: [
+        Container(width: 60, height: 18,
+            decoration: BoxDecoration(color: color,
+                borderRadius: BorderRadius.circular(6))),
+        const SizedBox(height: 4),
+        Text(label, style: const TextStyle(fontSize: 10, color: Color(0xFF9E9E9E))),
+      ]),
+    );
+  }
+
+  // ── Bottom Row ──
+  Widget _bottomRow(IrCodeModel? codes) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16),
+        boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.05),
+            blurRadius: 8, offset: const Offset(0, 2))]),
+      child: Row(mainAxisAlignment: MainAxisAlignment.spaceEvenly, children: [
+        _featureBtn(Icons.threed_rotation, '3D Mode', () => _send(null)),
+        Container(width: 1, height: 28, color: const Color(0xFFEEEEEE)),
+        _featureBtn(Icons.mic_rounded, 'Voice', () => _send(null)),
+        Container(width: 1, height: 28, color: const Color(0xFFEEEEEE)),
+        _featureBtn(Icons.keyboard_rounded, 'Keyboard', () => _send(null)),
+      ]),
+    );
+  }
+
+  Widget _featureBtn(IconData icon, String label, VoidCallback onTap) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Row(children: [
+        Icon(icon, size: 18, color: const Color(0xFF4DB6E8)),
+        const SizedBox(width: 6),
+        Text(label, style: const TextStyle(fontSize: 12, color: Color(0xFF555555),
+            fontWeight: FontWeight.w500)),
+      ]),
     );
   }
 
   @override
-  void dispose() {
-    _bannerAd?.dispose();
-    _tabController.dispose();
-    super.dispose();
-  }
+  void dispose() { _banner?.dispose(); super.dispose(); }
 }

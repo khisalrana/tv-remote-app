@@ -2,22 +2,28 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
+import 'models/brand_model.dart';
 import 'screens/splash_screen.dart';
 import 'services/ad_service.dart';
-import 'models/brand_model.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
   SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
     statusBarColor: Colors.transparent,
     statusBarIconBrightness: Brightness.dark,
   ));
   await AdService.initialize();
   await AdService.loadInterstitialAd();
-  runApp(const MyApp());
+  runApp(
+    ChangeNotifierProvider(
+      create: (_) => AppState(),
+      child: const MyApp(),
+    ),
+  );
 }
 
-class RemoteAppState extends ChangeNotifier {
+class AppState extends ChangeNotifier {
   BrandModel? selectedBrand;
   IrCodeModel? irCodes;
   bool hasIr = false;
@@ -39,22 +45,19 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ChangeNotifierProvider(
-      create: (_) => RemoteAppState(),
-      child: MaterialApp(
-        title: 'Universal TV Remote',
-        debugShowCheckedModeBanner: false,
-        theme: ThemeData(
-          colorScheme: ColorScheme.fromSeed(
-            seedColor: const Color(0xFF4DB6E8),
-            brightness: Brightness.light,
-          ),
-          textTheme: GoogleFonts.poppinsTextTheme(),
-          useMaterial3: true,
-          scaffoldBackgroundColor: const Color(0xFFF2F5F9),
+    return MaterialApp(
+      title: 'Univercel Remote - TV Controller',
+      debugShowCheckedModeBanner: false,
+      theme: ThemeData(
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: const Color(0xFF4DB6E8),
+          brightness: Brightness.light,
         ),
-        home: const SplashScreen(),
+        textTheme: GoogleFonts.poppinsTextTheme(),
+        useMaterial3: true,
+        scaffoldBackgroundColor: const Color(0xFFF2F5F9),
       ),
+      home: const SplashScreen(),
     );
   }
 }
